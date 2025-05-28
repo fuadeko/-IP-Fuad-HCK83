@@ -1,0 +1,43 @@
+"use strict";
+const { hashPassword } = require("../helpers/bcrypt");
+/** @type {import('sequelize-cli').Migration} */
+module.exports = {
+  async up(queryInterface, Sequelize) {
+    await queryInterface.bulkInsert(
+      "users",
+      [
+        {
+          googleId: "dummy_google_id_12345",
+          displayName: "DaunKu Admin Test",
+          email: "admin.test@daunku.com",
+          password: await hashPassword("123456"),
+          photo:
+            "https://res.cloudinary.com/dfmterqyl/image/upload/v1/samples/avatar-admin.png",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          googleId: "dummy_googleid_67890",
+          displayName: "Test Planter",
+          email: "planter.test@daunku.com",
+          password: null,
+          photo:
+            "https://res.cloudinary.com/dfmterqyl/image/upload/v1/samples/avatar-planter.png",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ],
+      {}
+    );
+  },
+
+  async down(queryInterface, Sequelize) {
+    await queryInterface.bulkDelete(
+      "users",
+      {
+        email: ["admin.test@daunku.com", "planter.test@daunku.com"],
+      },
+      {}
+    );
+  },
+};
