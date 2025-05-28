@@ -23,7 +23,7 @@ module.exports = (sequelize, DataTypes) => {
         unique: true,
         allowNull: true,
       },
-      displayName: {
+      userName: {
         type: DataTypes.STRING,
         allowNull: false,
       },
@@ -37,18 +37,17 @@ module.exports = (sequelize, DataTypes) => {
       },
       password: {
         type: DataTypes.STRING,
-        allowNull: true,  // Ubah ke true
+        allowNull: true,
         validate: {
           len: {
             args: [6, 255],
             msg: "Password minimal 6 karakter",
           },
-          // Tambahkan custom validation
           passwordRequired(value) {
             if (!this.googleId && !value) {
               throw new Error('Password wajib diisi untuk registrasi manual');
             }
-          }
+          },
         },
       },
       photo: {
@@ -61,12 +60,12 @@ module.exports = (sequelize, DataTypes) => {
       modelName: "User",
       tableName: "users",
       hooks: {
-        beforeCreate: async (user, options) => {
+        beforeCreate: async (user) => {
           if (user.password) {
             user.password = await hashPassword(user.password);
           }
         },
-        beforeUpdate: async (user, options) => {
+        beforeUpdate: async (user) => {
           if (user.changed("password") && user.password) {
             user.password = await hashPassword(user.password);
           }
@@ -74,5 +73,6 @@ module.exports = (sequelize, DataTypes) => {
       },
     }
   );
+
   return User;
 };

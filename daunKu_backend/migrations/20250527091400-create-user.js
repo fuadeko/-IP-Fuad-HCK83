@@ -14,7 +14,7 @@ module.exports = {
         unique: true,
         allowNull: true,
       },
-      displayName: {
+      userName: {
         type: Sequelize.STRING,
         allowNull: false,
       },
@@ -25,7 +25,7 @@ module.exports = {
       },
       password: {
         type: Sequelize.STRING,
-        allowNull: true,  // Ubah ke true untuk mendukung Google login
+        allowNull: true,
       },
       photo: {
         type: Sequelize.STRING,

@@ -1,25 +1,24 @@
-const db = require("../models");
 const { signToken } = require("../helpers/jwt");
+const db = require("../models");
 
 class AuthController {
   static async register(req, res, next) {
     const { displayName, email, password } = req.body;
-    
-    // Validasi input
+
     if (!displayName || !email || !password) {
       return next({
         name: "ValidationError",
         message: "Display name, email, dan password wajib diisi.",
       });
     }
-    
+
     if (password.length < 6) {
       return next({
         name: "ValidationError",
         message: "Password minimal 6 karakter.",
       });
     }
-    
+
     try {
       const existingUser = await db.User.findOne({ where: { email } });
       if (existingUser) {
@@ -28,22 +27,22 @@ class AuthController {
           message: "Email sudah terdaftar.",
         });
       }
-      
+
       const user = await db.User.create({
-        displayName,
+        userName,
         email,
         password,
-        googleId: null  // Explicitly set null untuk registrasi manual
+        googleId: null,
       });
-      
+
       const token = signToken({ id: user.id });
-    
+
       res.status(201).json({
         message: "Registrasi berhasil!",
         token,
         user: {
           id: user.id,
-          displayName: user.displayName,
+          userName: user.userName,
           email: user.email,
           photo: user.photo,
         },
@@ -53,6 +52,7 @@ class AuthController {
       next(error);
     }
   }
+
   static async login(req, res, next) {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -84,7 +84,7 @@ class AuthController {
         token,
         user: {
           id: user.id,
-          displayName: user.displayName,
+          userName: user.userName,
           email: user.email,
           photo: user.photo,
         },
@@ -94,7 +94,13 @@ class AuthController {
       next(error);
     }
   }
+
   static async googleLogin(req, res, next) {
+    console.log("NODE_ENV:", process.env.NODE_ENV);
+    console.log(
+      "GOOGLE_CLIENT_ID:",
+      process.env.GOOGLE_CLIENT_ID ? "EXISTS" : "MISSING"
+    );
     const { idToken } = req.body;
 
     if (!idToken) {
@@ -105,31 +111,33 @@ class AuthController {
     }
 
     try {
-      // Note: Uncomment dan install google-auth-library untuk production
-      // const { OAuth2Client } = require("google-auth-library");
-      // const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-      //
-      // const ticket = await client.verifyIdToken({
-      //   idToken: idToken,
-      //   audience: process.env.GOOGLE_CLIENT_ID,
-      // });
-      // const payload = ticket.getPayload();
-      // const { sub, email, name, picture } = payload;
+      let sub, email, name, picture;
 
-      // Untuk development, gunakan mock data
-      const { sub, email, name, picture } = {
-        sub: "google_" + Date.now(),
-        email: "test@gmail.com",
-        name: "Test User",
-        picture: "https://via.placeholder.com/150",
-      };
+      if (process.env.NODE_ENV === "production") {
+        const { OAuth2Client } = require("google-auth-library");
+        const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+        const ticket = await client.verifyIdToken({
+          idToken: idToken,
+          audience: process.env.GOOGLE_CLIENT_ID,
+        });
+        const payload = ticket.getPayload();
+        ({ sub, email, name, picture } = payload);
+      } else {
+        ({ sub, email, name, picture } = {
+          sub: "google_" + Date.now(),
+          email: "test@gmail.com",
+          name: "Test User",
+          picture: "https://via.placeholder.com/150",
+        });
+      }
 
       let user = await db.User.findOne({ where: { googleId: sub } });
 
       if (!user) {
         user = await db.User.create({
           googleId: sub,
-          displayName: name,
+          userName: name,
           email: email,
           password: "google_auth_" + sub,
           photo: picture,
@@ -143,7 +151,7 @@ class AuthController {
         token,
         user: {
           id: user.id,
-          displayName: user.displayName,
+          userName: user.userName,
           email: user.email,
           photo: user.photo,
         },

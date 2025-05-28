@@ -7,8 +7,9 @@ const router = express.Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
+// ===== PLANT IDENTIFICATION =====
 /**
- * @route POST /api/plants/identify
+ * @route POST /plants/identify
  * @desc Mengidentifikasi tanaman dari gambar yang diunggah
  * @access Private
  */
@@ -18,20 +19,22 @@ router.post(
   PlantController.identifyPlant
 );
 
+// ===== PLANT CRUD OPERATIONS =====
+/**
+ * @route GET /plants
+ * @desc Dapatkan semua tanaman milik user (Collection)
+ * @access Private
+ */
+router.get("/", PlantController.getAllPlants);
+
 /**
  * @route POST /api/plants
  * @desc Tambah tanaman baru ke koleksi user
  * @access Private
  */
-router.post("/", PlantController.addPlant);
+router.post("/add-plant", PlantController.addPlant);
 
-/**
- * @route GET /api/plants
- * @desc Dapatkan semua tanaman milik user
- * @access Private
- */
-router.get("/", PlantController.getAllPlants);
-
+router.get("/stats/summary", PlantController.getPlantStats);
 /**
  * @route GET /api/plants/:id
  * @desc Dapatkan detail tanaman berdasarkan ID
@@ -44,13 +47,20 @@ router.get("/:id", PlantController.getPlantById);
  * @desc Update informasi tanaman
  * @access Private
  */
-router.put("/:id", PlantController.updatePlant);
+router.put("/update/:id", PlantController.updatePlant);
 
 /**
  * @route DELETE /api/plants/:id
- * @desc Hapus tanaman
+ * @desc Hapus tanaman dari koleksi
  * @access Private
  */
-router.delete("/:id", PlantController.deletePlant);
+router.delete("/delete/:id", PlantController.deletePlant);
+
+// ===== PLANT STATISTICS =====
+/**
+ * @route GET /api/plants/stats/summary
+ * @desc Dapatkan ringkasan statistik tanaman user
+ * @access Private
+ */
 
 module.exports = router;

@@ -8,7 +8,7 @@ module.exports = {
       [
         {
           googleId: "dummy_google_id_12345",
-          displayName: "DaunKu Admin Test",
+          userName: "DaunKu Admin Test",
           email: "admin.test@daunku.com",
           password: await hashPassword("123456"),
           photo:
@@ -18,7 +18,7 @@ module.exports = {
         },
         {
           googleId: "dummy_googleid_67890",
-          displayName: "Test Planter",
+          userName: "Test Planter",
           email: "planter.test@daunku.com",
           password: null,
           photo:

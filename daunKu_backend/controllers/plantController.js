@@ -21,20 +21,17 @@ class PlantController {
     }
 
     try {
-      // Upload ke cloudinary (uncomment untuk production)
-      // const result = await cloudinary.uploader.upload(
-      //   `data:${req.file.mimetype};base64,${req.file.buffer.toString(
-      //     "base64"
-      //   )}`,
-      //   {
-      //     folder: `daunku/plant-identifications/${req.user.id}`,
-      //     resource_type: "image",
-      //   }
-      // );
-      // const imageUrl = result.secure_url;
+      let imageUrl;
 
-      // Mock image URL untuk development
-      const imageUrl = "https://via.placeholder.com/400x300";
+      if (process.env.NODE_ENV === "production") {
+        const result = await cloudinary.uploader.upload(req.file.path, {
+          folder: "plant-images",
+          resource_type: "image",
+        });
+        imageUrl = result.secure_url;
+      } else {
+        imageUrl = "https://via.placeholder.com/400x300";
+      }
 
       const plantIdResponse = await axios.post(
         PLANTID_API_URL,
@@ -233,6 +230,47 @@ class PlantController {
       res.status(200).json({ message: "Tanaman berhasil dihapus!" });
     } catch (error) {
       console.error("Error menghapus tanaman:", error);
+      next(error);
+    }
+  }
+  static async getPlantStats(req, res, next) {
+    try {
+      const userId = req.user.id;
+      const totalPlants = await db.Plant.count({
+        where: { userId },
+      });
+
+      const plantsNeedingWater = await db.Plant.count({
+        where: {
+          userId,
+          nextWatering: {
+            [db.Sequelize.Op.lte]: new Date(),
+          },
+        },
+      });
+
+      const totalCareLogs = await db.CareLog.count({
+        include: [
+          {
+            model: db.Plant,
+            where: { userId },
+          },
+        ],
+      });
+
+      const stats = {
+        totalPlants,
+        plantsNeedingWater,
+        totalCareLogs,
+        healthyPlants: totalPlants - plantsNeedingWater,
+      };
+
+      res.status(200).json({
+        message: "Statistik tanaman berhasil diambil!",
+        stats,
+      });
+    } catch (error) {
+      console.error("Error mendapatkan statistik tanaman:", error);
       next(error);
     }
   }
