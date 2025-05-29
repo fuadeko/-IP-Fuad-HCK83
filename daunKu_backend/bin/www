@@ -1,0 +1,18 @@
+const { sequelize } = require("./models");
+const port = process.env.PORT || 3000;
+const app = require("./app");
+async function connectToDb() {
+  try {
+    await sequelize.authenticate();
+    console.log("Koneksi ke database PostgreSQL berhasil.");
+  } catch (error) {
+    console.error("Koneksi database gagal:", error);
+  }
+}
+if (process.env.NODE_ENV !== "production") {
+  connectToDb().then(() => {
+    app.listen(port, () => {
+      console.log(`Server DaunKu berjalan di port ${port}`);
+    });
+  });
+}

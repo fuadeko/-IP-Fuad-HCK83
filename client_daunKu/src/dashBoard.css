@@ -1,0 +1,243 @@
+/* Tailwind directives should come first */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom base styles */
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+      "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
+      "Helvetica Neue", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    @apply bg-gray-50 text-gray-900 leading-relaxed;
+  }
+}
+
+/* Custom components */
+@layer components {
+  .btn-primary {
+    @apply bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors;
+  }
+
+  .btn-secondary {
+    @apply bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors;
+  }
+
+  .input-field {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent;
+  }
+
+  .card {
+    @apply bg-white rounded-lg shadow-md p-6;
+  }
+
+  /* Dashboard specific styles */
+  .dashboard-container {
+    @apply max-w-6xl mx-auto p-5 flex flex-col gap-6;
+  }
+
+  .welcome-card {
+    @apply bg-white rounded-xl p-8 shadow-sm;
+  }
+
+  .welcome-title {
+    @apply text-3xl font-bold text-gray-900 mb-2;
+  }
+
+  .welcome-subtitle {
+    @apply text-gray-600 text-lg;
+  }
+
+  .stats-grid {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6;
+  }
+
+  .stat-card {
+    @apply bg-white rounded-xl p-6 shadow-sm;
+  }
+
+  .stat-number {
+    @apply text-3xl font-bold text-green-600 mb-2;
+  }
+
+  .stat-label {
+    @apply text-gray-600 text-sm;
+  }
+
+  .recent-activity {
+    @apply bg-white rounded-xl p-6 shadow-sm;
+  }
+
+  .activity-title {
+    @apply text-xl font-semibold text-gray-900 mb-4;
+  }
+
+  .activity-list {
+    @apply space-y-3;
+  }
+
+  .activity-item {
+    @apply flex items-center justify-between p-3 bg-gray-50 rounded-lg;
+  }
+
+  .activity-content {
+    @apply flex items-center gap-3;
+  }
+
+  .activity-icon {
+    @apply w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-600;
+  }
+
+  .activity-text {
+    @apply text-gray-900 font-medium;
+  }
+
+  .activity-time {
+    @apply text-gray-500 text-sm;
+  }
+
+  .quick-actions {
+    @apply bg-white rounded-xl p-6 shadow-sm;
+  }
+
+  .actions-title {
+    @apply text-xl font-semibold text-gray-900 mb-4;
+  }
+
+  .actions-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 gap-4;
+  }
+
+  .action-button {
+    @apply flex items-center gap-3 p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors text-left;
+  }
+
+  .action-icon {
+    @apply w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-600 text-xl;
+  }
+
+  .action-content h3 {
+    @apply font-medium text-gray-900;
+  }
+
+  .action-content p {
+    @apply text-gray-600 text-sm;
+  }
+
+  /* Plants page specific styles */
+  .plants-container {
+    @apply space-y-6;
+  }
+
+  .plants-header {
+    @apply flex justify-between items-center;
+  }
+
+  .plants-title {
+    @apply text-3xl font-bold text-gray-900;
+  }
+
+  .plants-grid {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6;
+  }
+
+  .plant-card {
+    @apply bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow;
+  }
+
+  .plant-card-content {
+    @apply p-6;
+  }
+
+  .plant-card-header {
+    @apply flex items-center justify-between mb-4;
+  }
+
+  .plant-avatar {
+    @apply w-16 h-16 bg-green-100 rounded-full flex items-center justify-center text-2xl;
+  }
+
+  .plant-actions {
+    @apply flex space-x-2;
+  }
+
+  .plant-name {
+    @apply text-xl font-semibold text-gray-900 mb-2;
+  }
+
+  .plant-species {
+    @apply text-gray-600 mb-2;
+  }
+
+  .plant-date {
+    @apply text-sm text-gray-500;
+  }
+
+  .plant-notes {
+    @apply text-sm text-gray-600 mt-2 line-clamp-2;
+  }
+
+  /* Empty state */
+  .empty-state {
+    @apply text-center py-12;
+  }
+
+  .empty-state-icon {
+    @apply text-6xl mb-4;
+  }
+
+  .empty-state-title {
+    @apply text-xl font-semibold text-gray-900 mb-2;
+  }
+
+  .empty-state-description {
+    @apply text-gray-600 mb-6;
+  }
+
+  /* Loading state */
+  .loading-container {
+    @apply flex justify-center items-center h-64;
+  }
+
+  .loading-text {
+    @apply text-lg text-gray-600;
+  }
+
+  /* Error state */
+  .error-container {
+    @apply bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded;
+  }
+}
+
+/* Responsive utilities */
+@layer utilities {
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+/* Media queries for additional responsiveness */
+@media (max-width: 768px) {
+  .dashboard-container {
+    @apply p-4;
+  }
+
+  .welcome-card {
+    @apply p-6;
+  }
+
+  .plants-grid {
+    @apply grid-cols-1;
+  }
+}

@@ -1,0 +1,420 @@
+/* PlantIdentification Container */
+.plant-identification-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Header Section */
+.plant-identification-header {
+  margin-bottom: 24px;
+}
+
+.plant-identification-title {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #111827;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.plant-identification-subtitle {
+  color: #6b7280;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+/* Grid Layout */
+.plant-identification-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+@media (min-width: 1024px) {
+  .plant-identification-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Card Styles */
+.plant-identification-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  transition: box-shadow 0.3s ease;
+}
+
+.plant-identification-card:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Section Titles */
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 16px;
+}
+
+/* Upload Section */
+.upload-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.upload-dropzone {
+  position: relative;
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.upload-dropzone:hover {
+  border-color: #10b981;
+  background-color: #f0fdf4;
+}
+
+.upload-dropzone.has-file {
+  border-color: #10b981;
+  background-color: #f0fdf4;
+}
+
+/* File Input */
+.file-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* Preview Image */
+.preview-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+}
+
+.preview-image {
+  max-width: 100%;
+  height: 192px;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.change-image-btn {
+  font-size: 0.875rem;
+  color: #6b7280;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  transition: color 0.2s ease;
+}
+
+.change-image-btn:hover {
+  color: #374151;
+}
+
+/* Upload Placeholder */
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+
+.upload-icon {
+  font-size: 3rem;
+  margin-bottom: 8px;
+}
+
+.upload-text {
+  color: #6b7280;
+  font-size: 1rem;
+}
+
+.upload-subtext {
+  color: #9ca3af;
+  font-size: 0.875rem;
+}
+
+/* Identify Button */
+.identify-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.identify-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #059669, #047857);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.identify-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Loading Animation */
+.identify-btn.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  width: 16px;
+  height: 16px;
+  margin-top: -8px;
+  border: 2px solid transparent;
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Results Section */
+.results-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Error Message */
+.error-message {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-left: 4px solid #ef4444;
+  color: #dc2626;
+  padding: 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.error-icon {
+  color: #ef4444;
+  flex-shrink: 0;
+}
+
+/* Loading State */
+.loading-state {
+  text-align: center;
+  padding: 32px;
+}
+
+.loading-icon {
+  font-size: 2rem;
+  margin-bottom: 8px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.loading-text {
+  color: #6b7280;
+}
+
+/* Result Cards */
+.result-card {
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid;
+}
+
+.result-card.species {
+  border-color: #bbf7d0;
+  background-color: #f0fdf4;
+}
+
+.result-card.care-advice {
+  border-color: #bfdbfe;
+  background-color: #eff6ff;
+}
+
+.result-card.common-names {
+  border-color: #e5e7eb;
+  background-color: #f9fafb;
+}
+
+.result-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.result-title.species {
+  color: #166534;
+}
+
+.result-title.care-advice {
+  color: #1e40af;
+}
+
+.result-title.common-names {
+  color: #111827;
+}
+
+.species-name {
+  color: #166534;
+  font-size: 1.125rem;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.confidence-score {
+  color: #15803d;
+  font-size: 0.875rem;
+}
+
+.care-advice-text {
+  color: #1e40af;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* Common Names Tags */
+.common-names-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.common-name-tag {
+  background: #f3f4f6;
+  color: #374151;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s ease;
+}
+
+.common-name-tag:hover {
+  background: #e5e7eb;
+  transform: translateY(-1px);
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 32px;
+  color: #9ca3af;
+}
+
+.empty-icon {
+  font-size: 3rem;
+  margin-bottom: 8px;
+}
+
+.empty-text {
+  font-size: 1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .plant-identification-container {
+    padding: 16px;
+  }
+  
+  .plant-identification-title {
+    font-size: 1.75rem;
+  }
+  
+  .plant-identification-card {
+    padding: 20px;
+  }
+  
+  .upload-dropzone {
+    padding: 20px;
+    min-height: 160px;
+  }
+  
+  .preview-image {
+    height: 150px;
+  }
+}
+
+@media (max-width: 480px) {
+  .plant-identification-container {
+    padding: 12px;
+  }
+  
+  .plant-identification-title {
+    font-size: 1.5rem;
+  }
+  
+  .plant-identification-card {
+    padding: 16px;
+  }
+  
+  .upload-dropzone {
+    padding: 16px;
+    min-height: 140px;
+  }
+}
+
+/* Accessibility */
+.identify-btn:focus,
+.file-input:focus + .upload-dropzone {
+  outline: 2px solid #10b981;
+  outline-offset: 2px;
+}
+
+.change-image-btn:focus {
+  outline: 2px solid #6b7280;
+  outline-offset: 2px;
+}
+
+/* Animation for result appearance */
+.result-card {
+  animation: slideInUp 0.5s ease-out;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
