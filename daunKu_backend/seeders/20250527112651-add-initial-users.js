@@ -4,7 +4,7 @@ const { hashPassword } = require("../helpers/bcrypt");
 module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.bulkInsert(
-      "users",
+      "Users", // Ubah dari "users" ke "Users"
       [
         {
           googleId: "dummy_google_id_12345",
@@ -33,7 +33,7 @@ module.exports = {
 
   async down(queryInterface, Sequelize) {
     await queryInterface.bulkDelete(
-      "users",
+      "Users", // Ubah dari "users" ke "Users"
       {
         email: ["admin.test@daunku.com", "planter.test@daunku.com"],
       },

@@ -22,6 +22,6 @@ router.post("/login", AuthController.login);
  * @desc Proses Google Sign-In dan buat/dapatkan user
  * @access Public
  */
-router.post("/google", AuthController.googleLogin);
+router.post("/google", AuthController.loginWithGoogle);
 
 module.exports = router;

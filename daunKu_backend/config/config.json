@@ -9,15 +9,12 @@
   "test": {
     "username": "postgres",
     "password": "postgres",
-    "database": "daunKu_DB",
-    "host": "127.0.0.1",
+    "database": "daunKu_DB.test",
+    "host": "localhost",
     "dialect": "postgres"
   },
   "production": {
-    "username": "postgres",
-    "password": "postgres",
-    "database": "daunKu_DB",
-    "host": "127.0.0.1",
+    "use_env_variable": "DATABASE_URL",
     "dialect": "postgres"
   }
 }

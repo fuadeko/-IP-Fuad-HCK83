@@ -13,11 +13,8 @@ const upload = multer({ storage: storage });
  * @desc Mengidentifikasi tanaman dari gambar yang diunggah
  * @access Private
  */
-router.post(
-  "/identify",
-  upload.single("plantImage"),
-  PlantController.identifyPlant
-);
+
+router.post("/identify", upload.single("image"), PlantController.identifyPlant);
 
 // ===== PLANT CRUD OPERATIONS =====
 /**
@@ -54,7 +51,7 @@ router.put("/update/:id", PlantController.updatePlant);
  * @desc Hapus tanaman dari koleksi
  * @access Private
  */
-router.delete("/delete/:id", PlantController.deletePlant);
+router.delete("/:id", PlantController.deletePlant);
 
 // ===== PLANT STATISTICS =====
 /**

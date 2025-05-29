@@ -45,7 +45,7 @@ module.exports = (sequelize, DataTypes) => {
           },
           passwordRequired(value) {
             if (!this.googleId && !value) {
-              throw new Error('Password wajib diisi untuk registrasi manual');
+              throw new Error("Password wajib diisi untuk registrasi manual");
             }
           },
         },
@@ -58,16 +58,16 @@ module.exports = (sequelize, DataTypes) => {
     {
       sequelize,
       modelName: "User",
-      tableName: "users",
+      tableName: "Users", // Tambahkan ini untuk memastikan nama tabel PascalCase
       hooks: {
-        beforeCreate: async (user) => {
+        beforeCreate: (user) => {
           if (user.password) {
-            user.password = await hashPassword(user.password);
+            user.password = hashPassword(user.password);
           }
         },
-        beforeUpdate: async (user) => {
+        beforeUpdate: (user) => {
           if (user.changed("password") && user.password) {
-            user.password = await hashPassword(user.password);
+            user.password = hashPassword(user.password);
           }
         },
       },

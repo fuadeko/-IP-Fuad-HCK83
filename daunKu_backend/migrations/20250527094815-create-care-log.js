@@ -3,6 +3,7 @@
 module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable("CareLogs", {
+      // Ubah dari "CareLogs" ke "carelogs"
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -13,7 +14,7 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: "plants",
+          model: "Plants", // Ubah dari "plants" ke "Plants"
           key: "id",
         },
         onUpdate: "CASCADE",

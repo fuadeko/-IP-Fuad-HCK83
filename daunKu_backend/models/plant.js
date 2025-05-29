@@ -26,7 +26,7 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         allowNull: false,
         references: {
-          model: "users",
+          model: "Users", // Ubah dari "users" ke "Users"
           key: "id",
         },
       },
@@ -82,6 +82,7 @@ module.exports = (sequelize, DataTypes) => {
     {
       sequelize,
       modelName: "Plant",
+      tableName: "Plants", // Tambahkan ini untuk memastikan nama tabel PascalCase
     }
   );
   return Plant;

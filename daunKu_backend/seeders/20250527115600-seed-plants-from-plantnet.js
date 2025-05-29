@@ -23,7 +23,7 @@ module.exports = {
       }
       console.log("Mencari user dummy 'admin.test@daunku.com' di database...");
       const users = await queryInterface.sequelize.query(
-        `SELECT id FROM users WHERE email = 'admin.test@daunku.com' LIMIT 1;`,
+        `SELECT id FROM "Users" WHERE email = 'admin.test@daunku.com' LIMIT 1;`, // Ubah dari users ke "Users"
         { type: queryInterface.sequelize.QueryTypes.SELECT }
       );
       console.log("Hasil query user:", users);
@@ -81,7 +81,7 @@ module.exports = {
         };
       });
 
-      await queryInterface.bulkInsert("plants", plantsToSeed, {});
+      await queryInterface.bulkInsert("Plants", plantsToSeed, {}); // Ubah dari "plants" ke "Plants"
       console.log(
         `Berhasil seeding ${plantsToSeed.length} tanaman dari PlantNet API.`
       );
@@ -96,7 +96,7 @@ module.exports = {
 
   async down(queryInterface, Sequelize) {
     await queryInterface.bulkDelete(
-      "plants",
+      "Plants", // Ubah dari "plants" ke "Plants"
       { notes: "Data dari PlantNet API" },
       {}
     );

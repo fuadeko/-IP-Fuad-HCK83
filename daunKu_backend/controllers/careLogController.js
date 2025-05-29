@@ -5,8 +5,8 @@ class CareLogController {
   static async addCareLog(req, res, next) {
     const {
       plantId,
-      type,
-      date,
+      careType,
+      date = new Date(),
       notes,
       problemDescription,
       problemImageUrl,
@@ -27,7 +27,7 @@ class CareLogController {
 
       const careLog = await db.CareLog.create({
         plantId,
-        type,
+        type: careType,
         date,
         notes,
         problemDescription,
@@ -35,7 +35,7 @@ class CareLogController {
         solution,
       });
 
-      if (type === "watering") {
+      if (careType === "watering") {
         plant.lastWatered = date;
         await plant.save();
       }
@@ -86,6 +86,7 @@ class CareLogController {
         include: [
           {
             model: db.Plant,
+            as: "plant", // ✅ Tambahkan alias yang sesuai
             where: { userId: req.user.id },
             attributes: ["id", "nickname", "speciesName"],
           },
