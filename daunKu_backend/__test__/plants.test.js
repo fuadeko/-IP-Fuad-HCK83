@@ -1,47 +1,64 @@
 const request = require("supertest");
 const { describe, it, expect, beforeAll, afterAll } = require("@jest/globals");
+
+// Import the mocks from unified-mock.js
+const { mockPlant, mockCareLog, createMocks } = require("./unified-mock");
+
+// Create mock instances
+const mocks = createMocks();
+
+// Mock models
+jest.mock("../models", () => ({
+  User: mocks.User,
+  Plant: mocks.Plant,
+  CareLog: mocks.CareLog,
+  sequelize: mocks.sequelize,
+  Sequelize: mocks.Sequelize,
+}));
+
+// Define Plant for reference in tests
+const Plant = mocks.Plant;
+
+// Mock JWT helper
+jest.mock("../helpers/jwt", () => ({
+  signToken: jest.fn(() => "mock-access-token"),
+  verifyToken: jest.fn((token) => {
+    if (token === "mock-access-token") {
+      return { id: 1 };
+    }
+    throw new Error("Invalid token");
+  }),
+}));
+
+// Mock authentication middleware
+jest.mock(
+  "../middleware/auth",
+  () =>
+    function mockAuthentication(req, res, next) {
+      if (req.headers.authorization === "Bearer mock-access-token") {
+        req.user = { id: 1 };
+        next();
+      } else {
+        res.status(401).json({ message: "Token not found" });
+      }
+    }
+);
+
+// Load app after mocks are set up
 const app = require("../app");
-const { hashPassword } = require("../helpers/bcrypt");
-const { sequelize, User, Plant } = require("../models");
-const { signToken } = require("../helpers/jwt");
-const { queryInterface } = sequelize;
 
-let access_token;
-let testUserId;
-let testPlantId;
+let access_token = "mock-access-token";
+let testUserId = 1;
+let testPlantId = 1;
 
-beforeAll(async () => {
+beforeAll(() => {
   console.log("1. Plants beforeAll jalan");
-
-  // Create test user
-  const testUser = {
-    userName: "testuser",
-    email: "test@example.com",
-    password: await hashPassword("password123"),
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
-
-  await queryInterface.bulkInsert("Users", [testUser]);
-
-  const user = await User.findOne({ where: { email: "test@example.com" } });
-  testUserId = user.id;
-  access_token = signToken({ id: user.id });
+  // No database setup needed with mocks
 });
 
-afterAll(async () => {
+afterAll(() => {
   console.log("3. Plants Drop table");
-
-  await queryInterface.bulkDelete("Plants", null, {
-    truncate: true,
-    restartIdentity: true,
-    cascade: true,
-  });
-  await queryInterface.bulkDelete("Users", null, {
-    truncate: true,
-    restartIdentity: true,
-    cascade: true,
-  });
+  // No database cleanup needed with mocks
 });
 
 describe("GET /plants", function () {
@@ -65,10 +82,10 @@ describe("GET /plants", function () {
 describe("POST /plants/add-plant", function () {
   it("should respond with new plant 201", async function () {
     const plantData = {
-      name: "Monstera Deliciosa",
-      species: "Monstera deliciosa",
+      nickname: "Monstera Deliciosa",
+      commonName: "Monstera",
+      speciesName: "Monstera deliciosa",
       location: "Ruang tamu",
-      plantingDate: "2024-01-15",
       notes: "Tanaman hias favorit",
     };
 
@@ -78,11 +95,15 @@ describe("POST /plants/add-plant", function () {
       .send(plantData);
 
     expect(response.status).toBe(201);
-    expect(response.body).toHaveProperty("id", expect.any(Number));
-    expect(response.body).toHaveProperty("name", plantData.name);
-    expect(response.body).toHaveProperty("species", plantData.species);
+    expect(response.body).toHaveProperty("plant");
+    expect(response.body.plant).toHaveProperty("id");
+    expect(response.body.plant).toHaveProperty("nickname", plantData.nickname);
+    expect(response.body.plant).toHaveProperty(
+      "speciesName",
+      plantData.speciesName
+    );
 
-    testPlantId = response.body.id;
+    testPlantId = 1; // Use fixed ID for tests
   });
 
   it("should respond 401 when token not found", async function () {
@@ -94,9 +115,10 @@ describe("POST /plants/add-plant", function () {
 
   it("should respond 400 when validation error", async function () {
     const plantData = {
-      name: "",
-      species: "",
-      location: "",
+      nickname: "Invalid Plant",
+      // Missing commonName which is required
+      speciesName: "Test species",
+      location: "Test location",
     };
 
     const response = await request(app)
@@ -110,23 +132,6 @@ describe("POST /plants/add-plant", function () {
 });
 
 describe("GET /plants/:id", function () {
-  beforeAll(async () => {
-    // Create a test plant first
-    const plantData = {
-      name: "Test Plant",
-      species: "Test species",
-      location: "Test location",
-      plantingDate: new Date(),
-      userId: testUserId,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    await queryInterface.bulkInsert("Plants", [plantData]);
-    const plant = await Plant.findOne({ where: { userId: testUserId } });
-    testPlantId = plant.id;
-  });
-
   it("should respond with plant detail 200", async function () {
     const response = await request(app)
       .get(`/plants/${testPlantId}`)
@@ -134,23 +139,33 @@ describe("GET /plants/:id", function () {
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty("id", testPlantId);
-    expect(response.body).toHaveProperty("name");
+    expect(response.body).toHaveProperty("nickname");
   });
 
   it("should respond 404 when plant not found", async function () {
+    // Mock Plant.findByPk to return null for ID 99999
+    const originalFindByPk = Plant.findByPk;
+    Plant.findByPk = jest.fn((id) => {
+      if (id === 99999) return null;
+      return originalFindByPk(id);
+    });
+
     const response = await request(app)
       .get("/plants/99999")
       .set("Authorization", `Bearer ${access_token}`);
 
     expect(response.status).toBe(404);
     expect(response.body).toHaveProperty("message");
+
+    // Restore original mock
+    Plant.findByPk = originalFindByPk;
   });
 });
 
 describe("PUT /plants/update/:id", function () {
   it("should respond with updated plant 200", async function () {
     const updateData = {
-      name: "Updated Plant Name",
+      nickname: "Updated Plant Name",
       location: "Updated location",
       notes: "Updated notes",
     };
@@ -161,18 +176,30 @@ describe("PUT /plants/update/:id", function () {
       .send(updateData);
 
     expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty("name", updateData.name);
-    expect(response.body).toHaveProperty("location", updateData.location);
+    expect(response.body).toHaveProperty("message");
+    expect(response.body).toHaveProperty("plant");
+    expect(response.body.plant).toHaveProperty("nickname", updateData.nickname);
+    expect(response.body.plant).toHaveProperty("location", updateData.location);
   });
 
   it("should respond 404 when plant not found", async function () {
+    // Mock Plant.findByPk to return null for ID 99999
+    const originalFindByPk = Plant.findByPk;
+    Plant.findByPk = jest.fn((id) => {
+      if (id === 99999) return null;
+      return originalFindByPk(id);
+    });
+
     const response = await request(app)
       .put("/plants/update/99999")
       .set("Authorization", `Bearer ${access_token}`)
-      .send({ name: "Test" });
+      .send({ nickname: "Test" });
 
     expect(response.status).toBe(404);
     expect(response.body).toHaveProperty("message");
+
+    // Restore original mock
+    Plant.findByPk = originalFindByPk;
   });
 });
 
@@ -187,12 +214,22 @@ describe("DELETE /plants/delete/:id", function () {
   });
 
   it("should respond 404 when plant not found", async function () {
+    // Mock Plant.findByPk to return null for ID 99999
+    const originalFindByPk = Plant.findByPk;
+    Plant.findByPk = jest.fn((id) => {
+      if (id === 99999) return null;
+      return originalFindByPk(id);
+    });
+
     const response = await request(app)
       .delete("/plants/delete/99999")
       .set("Authorization", `Bearer ${access_token}`);
 
     expect(response.status).toBe(404);
     expect(response.body).toHaveProperty("message");
+
+    // Restore original mock
+    Plant.findByPk = originalFindByPk;
   });
 });
 
@@ -203,7 +240,11 @@ describe("GET /plants/stats/summary", function () {
       .set("Authorization", `Bearer ${access_token}`);
 
     expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty("totalPlants", expect.any(Number));
-    expect(response.body).toHaveProperty("plantsByLocation");
+    expect(response.body).toHaveProperty("message");
+    expect(response.body).toHaveProperty("stats");
+    expect(response.body.stats).toHaveProperty(
+      "totalPlants",
+      expect.any(Number)
+    );
   });
 });

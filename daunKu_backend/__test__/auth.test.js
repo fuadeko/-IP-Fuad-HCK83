@@ -1,47 +1,119 @@
 const request = require("supertest");
-const { describe, it, expect, beforeAll, afterAll } = require("@jest/globals");
-const app = require("../app");
-const { hashPassword } = require("../helpers/bcrypt");
-const { sequelize, User } = require("../models");
-const { signToken } = require("../helpers/jwt");
-const { queryInterface } = sequelize;
+const {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  beforeEach,
+} = require("@jest/globals");
 
-let access_token;
+// Import the mocks from unified-mock.js
+const { mockPlant, mockCareLog, createMocks } = require("./unified-mock");
 
-beforeAll(async () => {
-  console.log("1. beforeAll auth test jalan");
+// Create mock instances
+const mocks = createMocks();
 
-  // Clean up existing data
-  await queryInterface.bulkDelete("Users", null, {
-    truncate: true,
-    restartIdentity: true,
-    cascade: true,
+// Mock bcrypt helper
+jest.mock("../helpers/bcrypt", () => ({
+  hashPassword: jest.fn(() => "hashed-password-123"),
+  comparePassword: jest.fn((password, hashedPassword) => {
+    // For testing login success and failure cases
+    if (password === "password123") return true;
+    return false;
+  }),
+}));
+
+// Mock models
+jest.mock("../models", () => ({
+  User: mocks.User,
+  Plant: mocks.Plant,
+  CareLog: mocks.CareLog,
+  sequelize: mocks.sequelize,
+  Sequelize: mocks.Sequelize,
+}));
+
+// Custom setup for auth tests
+beforeEach(() => {
+  // Reset mocks
+  jest.clearAllMocks();
+
+  // Override User model for specific auth test cases
+  mocks.User.findOne.mockImplementation((query) => {
+    if (query.where?.email === "test@example.com") {
+      return {
+        id: 1,
+        userName: "testuser",
+        email: "test@example.com",
+        password: "hashed-password-123",
+      };
+    } else if (query.where?.id === 1) {
+      return {
+        id: 1,
+        userName: "testuser",
+        email: "test@example.com",
+        password: "hashed-password-123",
+      };
+    }
+    return null;
   });
 
-  // Create test user for login tests
-  const testUser = {
-    userName: "testuser",
-    email: "test@example.com",
-    password: await hashPassword("password123"),
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
-
-  await queryInterface.bulkInsert("Users", [testUser]);
-
-  const user = await User.findOne({ where: { email: "test@example.com" } });
-  access_token = signToken({ id: user.id });
+  mocks.User.create.mockImplementation((userData) => {
+    if (userData.email === "newuser@example.com") {
+      return {
+        id: 2,
+        ...userData,
+      };
+    } else if (userData.email === "test@example.com") {
+      throw { name: "SequelizeUniqueConstraintError" };
+    }
+    return userData;
+  });
 });
 
-afterAll(async () => {
-  console.log("3. Drop auth test tables");
+// Mock JWT helper
+jest.mock("../helpers/jwt", () => ({
+  signToken: jest.fn(() => "mock-access-token"),
+  verifyToken: jest.fn((token) => {
+    if (token === "mock-access-token") {
+      return { id: 1 };
+    }
+    throw new Error("Invalid token");
+  }),
+}));
 
-  await queryInterface.bulkDelete("Users", null, {
-    truncate: true,
-    restartIdentity: true,
-    cascade: true,
-  });
-  await sequelize.close();
+// Mock Google OAuth
+jest.mock("google-auth-library", () => ({
+  OAuth2Client: jest.fn().mockImplementation(() => ({
+    verifyIdToken: jest.fn(({ idToken }) => {
+      if (idToken === "valid-google-token") {
+        return {
+          getPayload: jest.fn(() => ({
+            email: "google@example.com",
+            name: "Google User",
+            picture: "https://example.com/photo.jpg",
+          })),
+        };
+      }
+      throw new Error("Invalid token");
+    }),
+  })),
+}));
+
+// Load app after mocks are set up
+const app = require("../app");
+const { signToken } = require("../helpers/jwt");
+
+let access_token = "mock-access-token";
+
+beforeAll(() => {
+  console.log("1. beforeAll auth test jalan");
+  // No need for database setup since we're mocking
+});
+
+afterAll(() => {
+  console.log("3. Drop auth test tables");
+  // No need for database cleanup
 });
 
 describe("POST /auth/register", function () {
