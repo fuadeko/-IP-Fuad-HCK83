@@ -91,10 +91,3 @@ const careLogSlice = createSlice({
 
 export const { clearError, clearCareSchedule } = careLogSlice.actions;
 export default careLogSlice.reducer;
-
-const careLogs = await db.CareLog.findAll(...);
-const mappedLogs = careLogs.map((log) => ({
-  ...log.toJSON(),
-  careType: log.type,
-}));
-res.status(200).json({ message: "...", careLogs: mappedLogs });
