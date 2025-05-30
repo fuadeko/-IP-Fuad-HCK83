@@ -11,9 +11,10 @@ async function connectToDb() {
 }
 if (process.env.NODE_ENV !== "production") {
   require("dotenv").config();
-  connectToDb().then(() => {
-    app.listen(port, () => {
-      console.log(`Server DaunKu berjalan di port ${port}`);
-    });
-  });
 }
+
+connectToDb().then(() => {
+  app.listen(port, () => {
+    console.log(`Server DaunKu berjalan di port ${port}`);
+  });
+});
