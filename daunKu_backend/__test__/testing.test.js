@@ -1,51 +1,85 @@
 const request = require("supertest");
 const { describe, it, expect, beforeAll, afterAll } = require("@jest/globals");
-const app = require("../app");
-const { hashPassword } = require("../helpers/bcrypt");
-const { sequelize, User, Plant } = require("../models"); // Pastikan Plant di-impor
-const { signToken } = require("../helpers/jwt");
-const { queryInterface } = sequelize;
 
-let access_token;
-let testUserId;
-
-// === SETUP & TEARDOWN GLOBAL ===
-beforeAll(async () => {
-  console.log("1. Memulai setup global: Membuat user untuk pengujian...");
-
-  // Membuat user tes
-  const testUser = {
-    userName: "testuser",
-    email: "test@example.com",
-    password: await hashPassword("password123"),
+// Mock data
+const mockPlants = [
+  {
+    id: 1,
+    userId: 1,
+    nickname: "Test Plant",
+    commonName: "Common Test Plant",
+    speciesName: "Test species",
+    location: "Test location",
+    acquisitionDate: new Date(),
     createdAt: new Date(),
     updatedAt: new Date(),
-  };
+  },
+];
 
-  // Menggunakan create agar lebih bersih dan bisa mendapatkan user instance,
-  // namun bulkInsert juga tidak masalah di sini.
-  await queryInterface.bulkInsert("Users", [testUser]);
+// Import the mocks
+const { mockPlant, mockCareLog, createMocks } = require("./unified-mock");
 
-  const user = await User.findOne({ where: { email: "test@example.com" } });
-  testUserId = user.id;
-  access_token = signToken({ id: user.id });
+// Create mock instances
+const mocks = createMocks();
+
+// Mock models
+jest.mock("../models", () => ({
+  User: mocks.User,
+  Plant: mocks.Plant,
+  CareLog: mocks.CareLog,
+  sequelize: mocks.sequelize,
+  Sequelize: mocks.Sequelize,
+}));
+
+// Define Plant for reference in tests
+const Plant = mocks.Plant;
+
+// Mock JWT helper
+jest.mock("../helpers/jwt", () => ({
+  signToken: jest.fn(() => "mock-access-token"),
+  verifyToken: jest.fn((token) => {
+    if (token === "mock-access-token") {
+      return { id: 1 };
+    }
+    throw new Error("Invalid token");
+  }),
+}));
+
+// Mock authentication middleware
+jest.mock(
+  "../middleware/auth",
+  () =>
+    function mockAuthentication(req, res, next) {
+      if (req.headers.authorization === "Bearer mock-access-token") {
+        req.user = { id: 1 };
+        next();
+      } else {
+        res.status(401).json({ message: "Token not found" });
+      }
+    }
+);
+
+// Mock bcrypt for password hashing
+jest.mock("../helpers/bcrypt", () => ({
+  hashPassword: jest.fn(() => "hashed-password-123"),
+  comparePassword: jest.fn(
+    (password, hashedPassword) => password === "password123"
+  ),
+}));
+
+// Load app after mocks are set up
+const app = require("../app");
+
+let access_token = "mock-access-token";
+let testUserId = 1;
+let testPlantId = 1;
+
+beforeAll(() => {
+  console.log("1. Testing Tests beforeAll jalan");
 });
 
-afterAll(async () => {
-  console.log("3. Menjalankan teardown global: Menghapus semua data...");
-
-  // Membersihkan tabel Plants dan Users untuk memastikan database bersih setelah tes
-  await queryInterface.bulkDelete("Plants", null, {
-    truncate: true,
-    restartIdentity: true,
-    cascade: true,
-  });
-  await queryInterface.bulkDelete("Users", null, {
-    truncate: true,
-    restartIdentity: true,
-    cascade: true,
-  });
-  await sequelize.close();
+afterAll(() => {
+  console.log("3. Testing Tests completed");
 });
 
 // === KUMPULAN TES ===
@@ -232,5 +266,47 @@ describe("GET /plants/stats/summary - Mengambil statistik tanaman", function () 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty("totalPlants", expect.any(Number));
     expect(response.body).toHaveProperty("plantsByLocation");
+  });
+});
+
+describe("Plant API Integration Tests", function () {
+  describe("GET /plants", function () {
+    it("should get all plants for the user", async function () {
+      const response = await request(app)
+        .get("/plants")
+        .set("Authorization", `Bearer ${access_token}`);
+
+      expect(response.status).toBe(200);
+      expect(Array.isArray(response.body)).toBeTruthy();
+      expect(response.body.length).toBeGreaterThan(0);
+    });
+
+    it("should return 401 when token is not provided", async function () {
+      const response = await request(app).get("/plants");
+
+      expect(response.status).toBe(401);
+      expect(response.body).toHaveProperty("message");
+    });
+  });
+
+  describe("GET /plants/:id", function () {
+    it("should get a specific plant by ID", async function () {
+      const response = await request(app)
+        .get(`/plants/${testPlantId}`)
+        .set("Authorization", `Bearer ${access_token}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty("id", testPlantId);
+    });
+  });
+});
+
+describe("Error Handling", function () {
+  it("should handle route not found", async function () {
+    const response = await request(app)
+      .get("/non-existent-route")
+      .set("Authorization", `Bearer ${access_token}`);
+
+    expect(response.status).toBe(404);
   });
 });

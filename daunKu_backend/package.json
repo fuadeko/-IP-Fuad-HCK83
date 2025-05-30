@@ -4,8 +4,8 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "test": "cross-env NODE_ENV=test jest --detectOpenHandles --forceExit",
-    "test:watch": "cross-env NODE_ENV=test jest --watch",
+    "test": "cross-env NODE_ENV=test node create-test-db.js && cross-env NODE_ENV=test node setup-test-db.js && cross-env NODE_ENV=test jest --verbose --detectOpenHandles --coverage",
+    "test:watch": "cross-env NODE_ENV=test node create-test-db.js && cross-env NODE_ENV=test node setup-test-db.js && cross-env NODE_ENV=test jest --watch",
     "dev": "node --watch app.js",
     "start": "node app.js"
   },
@@ -13,6 +13,9 @@
     "testEnvironment": "node",
     "testMatch": [
       "**/__test__/**/*.test.js"
+    ],
+    "setupFiles": [
+      "./jest-setup.js"
     ]
   },
   "keywords": [],

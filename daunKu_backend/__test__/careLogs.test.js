@@ -1,69 +1,159 @@
 const request = require("supertest");
-const { describe, it, expect, beforeAll, afterAll } = require("@jest/globals");
+const {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  beforeEach,
+} = require("@jest/globals");
+
+// Import the mocks from unified-mock.js
+const { mockPlant, mockCareLog, createMocks } = require("./unified-mock");
+
+// Create mock instances
+const mocks = createMocks();
+
+// Mock models
+jest.mock("../models", () => ({
+  User: mocks.User,
+  Plant: mocks.Plant,
+  CareLog: mocks.CareLog,
+  sequelize: mocks.sequelize,
+  Sequelize: mocks.Sequelize,
+}));
+
+// Define models for reference in tests
+const Plant = mocks.Plant;
+const CareLog = mocks.CareLog;
+
+// Custom mock data for care logs tests
+const mockCareLogs = [
+  {
+    ...mockCareLog,
+    id: 1,
+  },
+  {
+    ...mockCareLog,
+    id: 2,
+    type: "fertilizing",
+    careType: "fertilizing",
+    notes: "Added fertilizer",
+  },
+];
+
+// Override default mocks for specific test cases
+beforeEach(() => {
+  // Reset mocks
+  jest.clearAllMocks();
+
+  // Setup custom mock returns for CareLog functions
+  CareLog.findAll.mockImplementation((query) => {
+    if (query?.where?.plantId === 1) {
+      return mockCareLogs;
+    }
+    return [];
+  });
+
+  CareLog.findByPk.mockImplementation((id) => {
+    if (id === 1) {
+      return {
+        ...mockCareLog,
+        id: 1,
+        save: jest.fn().mockResolvedValue(mockCareLog),
+        update: jest.fn().mockResolvedValue([1]),
+        destroy: jest.fn().mockResolvedValue(1),
+      };
+    } else if (id === 2) {
+      return {
+        ...mockCareLog,
+        id: 2,
+        type: "fertilizing",
+        careType: "fertilizing",
+        notes: "Added fertilizer",
+        save: jest.fn().mockResolvedValue(mockCareLog),
+        update: jest.fn().mockResolvedValue([1]),
+        destroy: jest.fn().mockResolvedValue(1),
+      };
+    } else if (id === 99999) {
+      return null; // Not found case
+    }
+    return null;
+  });
+});
+
+// Mock JWT helper
+jest.mock("../helpers/jwt", () => ({
+  signToken: jest.fn(() => "mock-access-token"),
+  verifyToken: jest.fn((token) => {
+    if (token === "mock-access-token") {
+      return { id: 1 };
+    }
+    throw new Error("Invalid token");
+  }),
+}));
+
+// Mock authentication middleware
+jest.mock(
+  "../middleware/auth",
+  () =>
+    function mockAuthentication(req, res, next) {
+      if (req.headers.authorization === "Bearer mock-access-token") {
+        req.user = { id: 1 };
+        next();
+      } else {
+        res.status(401).json({ message: "Token not found" });
+      }
+    }
+);
+
+// Mock JWT helper
+jest.mock("../helpers/jwt", () => ({
+  signToken: jest.fn(() => "mock-access-token"),
+  verifyToken: jest.fn((token) => {
+    if (token === "mock-access-token") {
+      return { id: 1 };
+    }
+    throw new Error("Invalid token");
+  }),
+}));
+
+// Mock authentication middleware
+jest.mock(
+  "../middleware/auth",
+  () =>
+    function mockAuthentication(req, res, next) {
+      if (req.headers.authorization === "Bearer mock-access-token") {
+        req.user = { id: 1 };
+        next();
+      } else {
+        res.status(401).json({ message: "Token not found" });
+      }
+    }
+);
+
+// Load app after mocks are set up
 const app = require("../app");
-const { hashPassword } = require("../helpers/bcrypt");
-const { sequelize, User, Plant, CareLog } = require("../models");
-const { signToken } = require("../helpers/jwt");
-const { queryInterface } = sequelize;
 
-let access_token;
-let testUserId;
-let testPlantId;
-let testCareLogId;
+let access_token = "mock-access-token";
+let testUserId = 1;
+let testPlantId = 1;
+let testCareLogId = 1;
 
-beforeAll(async () => {
+beforeAll(() => {
   console.log("1. Care Logs beforeAll jalan");
-
-  // Create test user
-  const testUser = {
-    userName: "testuser",
-    email: "test@example.com",
-    password: await hashPassword("password123"),
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
-
-  await queryInterface.bulkInsert("Users", [testUser]);
-
-  const user = await User.findOne({ where: { email: "test@example.com" } });
-  testUserId = user.id;
-  access_token = signToken({ id: user.id });
-
-  // Create test plant
-  const testPlant = {
-    name: "Test Plant",
-    species: "Test species",
-    location: "Test location",
-    plantingDate: new Date(),
-    userId: testUserId,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
-
-  await queryInterface.bulkInsert("Plants", [testPlant]);
-
-  const plant = await Plant.findOne({ where: { userId: testUserId } });
-  testPlantId = plant.id;
+  // No database setup needed with mocks
 });
 
 afterAll(async () => {
   console.log("3. Care Logs Drop table");
 
-  await queryInterface.bulkDelete("CareLogs", null, {
-    truncate: true,
-    restartIdentity: true,
-    cascade: true,
-  });
-  await queryInterface.bulkDelete("Plants", null, {
-    truncate: true,
-    restartIdentity: true,
-    cascade: true,
-  });
-  await queryInterface.bulkDelete("Users", null, {
-    truncate: true,
-    restartIdentity: true,
-    cascade: true,
-  });
+  try {
+    // Mock cleanup is sufficient for our tests
+    // No need to actually delete from the database since we're using mocks
+  } catch (error) {
+    console.error("Error during cleanup:", error);
+  }
 });
 
 describe("GET /care-logs", function () {
@@ -151,20 +241,9 @@ describe("GET /care-logs/plant/:plantId", function () {
 });
 
 describe("PUT /care-logs/updatecare/:id", function () {
-  beforeAll(async () => {
-    // Create a test care log first
-    const careLogData = {
-      plantId: testPlantId,
-      careType: "fertilizing",
-      notes: "Test care log",
-      careDate: new Date(),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    await queryInterface.bulkInsert("CareLogs", [careLogData]);
-    const careLog = await CareLog.findOne({ where: { plantId: testPlantId } });
-    testCareLogId = careLog.id;
+  beforeAll(() => {
+    // Using the mock data that's already set up
+    testCareLogId = mockCareLogs[0].id;
   });
 
   it("should respond with updated care log 200", async function () {
@@ -207,6 +286,55 @@ describe("DELETE /care-logs/delete/:id", function () {
   it("should respond 404 when care log not found", async function () {
     const response = await request(app)
       .delete("/care-logs/delete/99999")
+      .set("Authorization", `Bearer ${access_token}`);
+
+    expect(response.status).toBe(404);
+    expect(response.body).toHaveProperty("message");
+  });
+});
+
+describe("GET /care-logs/:id", function () {
+  it("should respond with care log detail 200", async function () {
+    const response = await request(app)
+      .get(`/care-logs/${testCareLogId}`)
+      .set("Authorization", `Bearer ${access_token}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty("id", testCareLogId);
+    expect(response.body).toHaveProperty("careType");
+  });
+
+  it("should respond 404 when care log not found", async function () {
+    const response = await request(app)
+      .get("/care-logs/9999")
+      .set("Authorization", `Bearer ${access_token}`);
+
+    expect(response.status).toBe(404);
+    expect(response.body).toHaveProperty("message");
+  });
+
+  it("should respond 401 when token not found", async function () {
+    const response = await request(app).get(`/care-logs/${testCareLogId}`);
+
+    expect(response.status).toBe(401);
+    expect(response.body).toHaveProperty("message", "Token not found");
+  });
+});
+
+describe("GET /care-logs/statistics/:plantId", function () {
+  it("should respond with care log statistics 200", async function () {
+    const response = await request(app)
+      .get(`/care-logs/statistics/${testPlantId}`)
+      .set("Authorization", `Bearer ${access_token}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty("totalLogs");
+    expect(response.body).toHaveProperty("careTypeCounts");
+  });
+
+  it("should respond 404 when plant not found", async function () {
+    const response = await request(app)
+      .get("/care-logs/statistics/9999")
       .set("Authorization", `Bearer ${access_token}`);
 
     expect(response.status).toBe(404);

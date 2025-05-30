@@ -9,7 +9,7 @@
   "test": {
     "username": "postgres",
     "password": "postgres",
-    "database": "daunKu_DB.test",
+    "database": "daunKu_DB_test",
     "host": "localhost",
     "dialect": "postgres"
   },
